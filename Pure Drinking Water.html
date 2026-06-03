@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ডেলিভারি ম্যানেজমেন্ট</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --primary-color: #0077B6;
+            --accent-color: #00B4D8;
+            --background-color: #F0F8FF;
+            --text-color: #333;
+            --danger-color: #d9534f;
+            --warning-color: #f0ad4e;
+            --success-color: #5cb85c;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=SolaimanLipi:wght@400;700&display=swap');
+
+        body {
+            font-family: 'SolaimanLipi', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: all 0.3s;
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #fff;
+            border-right: 1px solid #ddd;
+            transition: all 0.3s;
+        }
+
+        .main-content, .navbar-top {
+            margin-left: 250px;
+            transition: all 0.3s;
+        }
+
+        body.sidebar-collapsed .sidebar {
+            left: -250px;
+        }
+        body.sidebar-collapsed .main-content,
+        body.sidebar-collapsed .navbar-top {
+            margin-left: 0;
+        }
+
+        .sidebar .nav-link {
+            color: #555;
+            font-weight: 500;
+            border-radius: 8px;
+            margin: 4px 10px;
+            padding: 10px 15px;
+        }
+
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: var(--background-color);
+            color: var(--primary-color);
+        }
+        .sidebar .nav-link.active i {
+            color: var(--primary-color);
+        }
+        .sidebar .nav-link i {
+           margin-right: 10px;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+        .sidebar-header h5 {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        
+        .navbar-top {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .page-title {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .summary-card .card-body { display: flex; align-items: center; }
+        .summary-card .icon { font-size: 2.5rem; padding: 20px; border-radius: 50%; margin-right: 20px; color: #fff; }
+
+        .btn-primary { background-color: var(--primary-color); border-color: var(--primary-color); }
+        .btn-primary:hover { background-color: #005f90; border-color: #005f90; }
+
+        .table { background-color: #fff; }
+        .table thead { background-color: var(--background-color); color: var(--primary-color); }
+        
+        .due-high { color: var(--danger-color); font-weight: bold; }
+        .due-medium { color: var(--warning-color); }
+        .due-ok { color: var(--success-color); }
+        
+        #invoice-container { padding: 30px; border: 1px solid #eee; background-color: #fff; }
+        .modal-header { background-color: var(--background-color); color: var(--primary-color); }
+
+        input.form-control, textarea.form-control, select.form-select {
+            color: #333;
+        }
+
+        .delete-note-icon {
+            cursor: pointer;
+            color: var(--danger-color);
+            opacity: 0.6;
+        }
+        .delete-note-icon:hover {
+            opacity: 1;
+        }
+
+
+        @media (max-width: 768px) {
+            body:not(.sidebar-collapsed) .sidebar {
+                left: -250px;
+                z-index: 1050;
+            }
+            body:not(.sidebar-collapsed) .sidebar.active {
+                left: 0;
+            }
+             body:not(.sidebar-collapsed) .main-content,  body:not(.sidebar-collapsed) .navbar-top {
+                margin-left: 0;
+            }
+            #sidebar-overlay { display: none; }
+            body:not(.sidebar-collapsed) .sidebar.active + #sidebar-overlay {
+                display: block; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background-color: rgba(0,0,0,0.5); z-index: 1040;
+            }
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #printable-report, #printable-report *,
+            #invoice-container, #invoice-container * {
+                visibility: visible;
+            }
+            #printable-report, #invoice-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #ddd;
+            }
+            .no-print {
+                display: none !important;
+            }
+             .table-striped tbody tr:nth-of-type(odd) {
+                background-color: rgba(0, 0, 0, 0.05) !important;
+            }
+            .bg-light {
+                 background-color: #f8f9fa !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar no-print" id="sidebar">
+        <div class="sidebar-header">
+            <h5 id="app-title-sidebar">বিশুদ্ধ পানীয় জল</h5>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link active" href="#" data-page="dashboard"><i class="bi bi-speedometer2"></i> ড্যাশবোর্ড</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-page="customers"><i class="bi bi-people-fill"></i> কাস্টমার</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-page="deliveries"><i class="bi bi-truck"></i> ডেলিভারি</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-page="payments"><i class="bi bi-cash-coin"></i> পেমেন্ট</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-page="expenses"><i class="bi bi-wallet2"></i> খরচ</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-page="reports"><i class="bi bi-bar-chart-line-fill"></i> রিপোর্ট</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-page="invoice"><i class="bi bi-receipt"></i> ইনভয়েস</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-page="profile"><i class="bi bi-gear-fill"></i> প্রোফাইল</a></li>
+        </ul>
+    </nav>
+    <div id="sidebar-overlay" onclick="toggleSidebarMobile()"></div>
+
+    <div class="main-content">
+        <!-- Top Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light fixed-top navbar-top no-print">
+            <div class="container-fluid">
+                <button class="btn btn-primary" type="button" onclick="toggleSidebar()">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h5 class="navbar-brand fw-bold text-primary mb-0 ms-2" id="page-header-title">ড্যাশবোর্ড</h5>
+                <span class="navbar-text ms-auto" id="current-bengali-date"></span>
+            </div>
+        </nav>
+
+        <div class="container-fluid" style="margin-top: 80px;">
+            <div id="dashboard-page" class="page"></div>
+            <div id="customers-page" class="page" style="display: none;"></div>
+            <div id="deliveries-page" class="page" style="display: none;"></div>
+            <div id="payments-page" class="page" style="display: none;"></div>
+            <div id="expenses-page" class="page" style="display: none;"></div>
+            <div id="reports-page" class="page" style="display: none;"></div>
+            <div id="invoice-page" class="page" style="display: none;"></div>
+            <div id="profile-page" class="page" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <div id="modal-container"></div>
+
+    <!-- CDN JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script>
+    // Utility Functions
+    const toBengaliDigit = n => n.toString().replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]);
+    const formatCurrency = amount => `৳ ${toBengaliDigit(parseFloat(amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}`;
+    const formatDate = (date) => new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const getBengaliMonthName = (monthIndex) => ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'][monthIndex];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        let state = {};
+
+        function initializeData() {
+            const defaultData = {
+                companyInfo: { name: "Pure Drinking Water Ltd.", address: "Goalmari Bazar, Daudkandi, Cumilla", phone1: "01317-580308", phone2: "", business: "20-liter jar home delivery", jarRefillCost: 6 },
+                customers: [], deliveries: [], payments: [], expenses: []
+            };
+            const savedData = localStorage.getItem('waterDeliveryAppData');
+            state = savedData ? JSON.parse(savedData) : defaultData;
+            
+            // The loadSampleData function will only run IF there is no saved data at all (first time run)
+            if (!savedData) { 
+                loadSampleData(); 
+                saveState();
+            }
+            updateCompanyInfoUI();
+        }
+
+        function saveState(){localStorage.setItem("waterDeliveryAppData",JSON.stringify(state))}
+        
+        function loadSampleData(){
+            // This function is now empty. It will not add any sample data.
+            state.customers = [];
+            state.deliveries = [];
+            state.payments = [];
+            state.expenses = [];
+        }
+
+        const pages = document.querySelectorAll('.page'), navLinks = document.querySelectorAll('.sidebar .nav-link');
+        function showPage(e){pages.forEach(e=>e.style.display="none"),document.getElementById(`${e}-page`).style.display="block",navLinks.forEach(t=>{t.classList.remove("active"),t.dataset.page===e&&t.classList.add("active")});const t=document.getElementById("page-header-title"),a=document.querySelector(`.sidebar .nav-link[data-page="${e}"]`);t&&a&&(t.textContent=a.innerText.trim());const n=window[`render${e.charAt(0).toUpperCase()+e.slice(1)}Page`];"function"==typeof n&&n()}
+        navLinks.forEach(e=>{e.addEventListener("click",t=>{t.preventDefault(),showPage(e.dataset.page),window.innerWidth<=768&&document.getElementById("sidebar").classList.remove("active")})});
+        function updateCurrentDate(){const e=new Date;document.getElementById("current-bengali-date").textContent=`${toBengaliDigit(e.getDate())} ${getBengaliMonthName(e.getMonth())}, ${toBengaliDigit(e.getFullYear())}`}
+        function updateCompanyInfoUI(){const{name:e}=state.companyInfo;document.getElementById("app-title-sidebar").textContent=e,document.title=`${e} | ড্যাশবোর্ড`}
+        function getCustomerCalculations(e){const t=state.customers.find(t=>t.id===e);if(!t)return{totalBill:0,totalPaid:0,totalDue:0};const a=state.deliveries.filter(t=>t.customerId===e).reduce((e,t)=>e+t.bill,0),n=state.payments.filter(t=>t.customerId===e).reduce((e,t)=>e+t.amount,0);return{totalBill:a,totalPaid:n,totalDue:(t.openingBalance||0)+a-n}}
+        window.updateDashboardData=function(){const e=parseInt(document.getElementById("dashboard-month-filter").value),t=parseInt(document.getElementById("dashboard-year-filter").value),a=getBengaliMonthName(e-1),n=state.payments.filter(a=>new Date(a.date).getMonth()===e-1&&new Date(a.date).getFullYear()===t),o=state.expenses.filter(a=>new Date(a.date).getMonth()===e-1&&new Date(a.date).getFullYear()===t),i=n.reduce((e,t)=>e+t.amount,0),d=o.reduce((e,t)=>e+t.amount,0),r=state.customers.reduce((e,t)=>e+getCustomerCalculations(t.id).totalDue,0);document.getElementById("card-title-income").textContent=`${a} মাসের মোট আয়`,document.getElementById("card-title-expense").textContent=`${a} মাসের মোট খরচ`,document.getElementById("card-title-profit").textContent=`${a} মাসের নিট লাভ`,document.getElementById("card-value-income").innerHTML=formatCurrency(i),document.getElementById("card-value-expense").innerHTML=formatCurrency(d),document.getElementById("card-value-profit").innerHTML=formatCurrency(i-d),document.getElementById("card-value-due").innerHTML=formatCurrency(r),renderMonthlyChart(t)}
+        window.renderDashboardPage=function(){const e=document.getElementById("dashboard-page"),t=new Date,a=t.getFullYear(),n=t.getMonth()+1,o=Array.from({length:10},(e,t)=>a-5+t).map(e=>`<option value="${e}" ${e===a?"selected":""}>${toBengaliDigit(e)}</option>`).join(""),i=Array.from({length:12},(e,t)=>`<option value="${t+1}" ${t+1===n?"selected":""}>${getBengaliMonthName(t)}</option>`).join("");e.innerHTML=`<div class="card mb-4"><div class="card-body"><div class="row g-3 align-items-end"><div class="col-md-5 col-sm-12"><label class="form-label">মাস</label><select id="dashboard-month-filter" class="form-select">${i}</select></div><div class="col-md-5 col-sm-12"><label class="form-label">বছর</label><select id="dashboard-year-filter" class="form-select">${o}</select></div><div class="col-md-2 col-sm-12"><button class="btn btn-primary w-100" onclick="updateDashboardData()">দেখুন</button></div></div></div></div><div class="row"><div class="col-xl-3 col-md-6 mb-4"><div class="card summary-card"><div class="card-body"><div class="icon" style="background-color:#28a745;"><i class="bi bi-wallet-fill"></i></div><div><h5 id="card-value-income" class="card-title mb-1"></h5><p id="card-title-income" class="card-text text-muted mb-0"></p></div></div></div></div><div class="col-xl-3 col-md-6 mb-4"><div class="card summary-card"><div class="card-body"><div class="icon" style="background-color:#dc3545;"><i class="bi bi-graph-down-arrow"></i></div><div><h5 id="card-value-expense" class="card-title mb-1"></h5><p id="card-title-expense" class="card-text text-muted mb-0"></p></div></div></div></div><div class="col-xl-3 col-md-6 mb-4"><div class="card summary-card"><div class="card-body"><div class="icon" style="background-color:#17a2b8;"><i class="bi bi-graph-up-arrow"></i></div><div><h5 id="card-value-profit" class="card-title mb-1"></h5><p id="card-title-profit" class="card-text text-muted mb-0"></p></div></div></div></div><div class="col-xl-3 col-md-6 mb-4"><div class="card summary-card"><div class="card-body"><div class="icon" style="background-color:#ffc107;"><i class="bi bi-exclamation-triangle-fill"></i></div><div><h5 id="card-value-due" class="card-title mb-1"></h5><p id="card-title-due" class="card-text text-muted mb-0">মোট বকেয়া</p></div></div></div></div></div><div class="row"><div class="col-12 mb-4"><div class="card"><div class="card-header">মাসিক আয় বনাম খরচ</div><div class="card-body"><canvas id="monthlyChart"></canvas></div></div></div></div><div class="row"><div class="col-12"><h4 class="mb-3">বকেয়া সতর্কতা তালিকা</h4><div id="due-alert-table"></div></div></div>`;const d=state.customers.map(e=>({...e,due:getCustomerCalculations(e.id).totalDue})).filter(e=>e.due>1e3);let r=d.map((e,t)=>`<tr><td>${toBengaliDigit(t+1)}</td><td>${e.name}</td><td>${e.address}</td><td class="text-end due-high">${formatCurrency(e.due)}</td><td class="text-center"><button class="btn btn-sm btn-success" onclick="sendDueReminderWhatsApp('${e.id}')"><i class="bi bi-whatsapp"></i> পাঠান</button></td></tr>`).join("");0===d.length&&(r=`<tr><td colspan="5" class="text-center">এই মুহূর্তে কোনো বড় বকেয়া নেই।</td></tr>`),document.getElementById("due-alert-table").innerHTML=`<div class="card"><div class="card-body"><div class="table-responsive"><table class="table table-hover table-striped table-bordered"><thead><tr><th>ক্রমিক নং</th><th>নাম</th><th>ঠিকানা</th><th class="text-end">বকেয়া</th><th class="text-center">একশন</th></tr></thead><tbody>${r}</tbody></table></div></div></div>`,updateDashboardData()}
+        window.sendDueReminderWhatsApp=function(e){const t=state.customers.find(t=>t.id===e);if(!t||!t.whatsapp)return void alert("এই কাস্টমারের কোনো WhatsApp নম্বর যোগ করা নেই।");const a=`প্রিয় ${t.name}, আপনার মোট বকেয়া ${formatCurrency(getCustomerCalculations(e).totalDue)}। অনুগ্রহ করে বকেয়া পরিশোধ করুন। ধন্যবাদ।`;window.open(`https://wa.me/${t.whatsapp}?text=${encodeURIComponent(a)}`,"_blank")}
+        function renderMonthlyChart(e){const t=document.getElementById("monthlyChart");if(!t)return;window.myMonthlyChart instanceof Chart&&window.myMonthlyChart.destroy();const a=["জানু","ফেব্রু","মার্চ","এপ্রি","মে","জুন","জুলাই","আগস্ট","সেপ্টে","অক্টো","নভে","ডিসে"],n=Array(12).fill(0),o=Array(12).fill(0);state.payments.forEach(t=>{new Date(t.date).getFullYear()===e&&(n[new Date(t.date).getMonth()]+=t.amount)}),state.expenses.forEach(t=>{new Date(t.date).getFullYear()===e&&(o[new Date(t.date).getMonth()]+=t.amount)}),window.myMonthlyChart=new Chart(t,{type:"line",data:{labels:a,datasets:[{label:"আয়",data:n,borderColor:"rgba(0, 180, 216, 1)",backgroundColor:"rgba(0, 180, 216, 0.2)",fill:!0,tension:.3},{label:"খরচ",data:o,borderColor:"rgba(217, 83, 79, 1)",backgroundColor:"rgba(217, 83, 79, 0.2)",fill:!0,tension:.3}]},options:{responsive:!0,scales:{y:{beginAtZero:!0,ticks:{stepSize:500,callback:e=>`৳${toBengaliDigit(e)}`}},x:{grid:{display:!1}}},plugins:{legend:{position:"right"},tooltip:{callbacks:{label:e=>`${e.dataset.label}: ${formatCurrency(e.raw)}`}}}}})}
+        window.renderCustomersPage=function(e=""){const t=document.getElementById("customers-page"),a=state.customers.filter(t=>t.name.toLowerCase().includes(e.toLowerCase())||t.address.toLowerCase().includes(e.toLowerCase())),n=a.map(e=>{const{totalBill:t,totalPaid:a,totalDue:n}=getCustomerCalculations(e.id),o=state.deliveries.filter(t=>t.customerId===e.id).reduce((e,t)=>e+t.jars,0);let i=n>1e3?"due-high":n>0?"due-medium":"due-ok";return`<tr><td><a href="#" class="fw-bold" onclick="openCustomerModal('${e.id}')">${e.name}</a></td><td>${e.address}</td><td class="text-end">${toBengaliDigit(o)}</td><td class="text-end">${formatCurrency(t+(e.openingBalance||0))}</td><td class="text-end">${formatCurrency(a)}</td><td class="text-end ${i}">${formatCurrency(n)}</td></tr>`}).join("");t.innerHTML=`<div class="d-flex justify-content-between align-items-center mb-3"><h2 class="page-title mb-0">কাস্টমার তালিকা</h2><button class="btn btn-primary" onclick="openCustomerModal()"><i class="bi bi-plus-circle me-2"></i> নতুন কাস্টমার যোগ করুন</button></div><div class="card"><div class="card-body"><div class="mb-3"><input type="text" id="customer-search" class="form-control" placeholder="নাম বা ঠিকানা দিয়ে খুঁজুন..."></div><div class="table-responsive"><table class="table table-hover table-striped table-bordered"><thead><tr><th>নাম</th><th>ঠিকানা</th><th class="text-end">মোট জার</th><th class="text-end">মোট বিল</th><th class="text-end">পরিশোধ</th><th class="text-end">বকেয়া</th></tr></thead><tbody>${n}</tbody></table></div></div></div>`,document.getElementById("customer-search").addEventListener("keyup",e=>renderCustomersPage(e.target.value))}
+        window.openCustomerModal=function(e=null){const t=e?state.customers.find(t=>t.id===e):null,a=t?"কাস্টমার প্রোফাইল":"নতুন কাস্টমার যোগ করুন";let n="";if(t){const{totalBill:a,totalPaid:o,totalDue:i}=getCustomerCalculations(e),d=state.deliveries.filter(t=>t.customerId===e).reduce((e,t)=>e+t.jars,0),r=[...state.deliveries,...state.payments].filter(t=>t.customerId===e),l=[...new Set(r.map(e=>new Date(e.date).getFullYear()))].sort((e,t)=>t-e),s="<option value=\"\">সব বছর</option>"+l.map(e=>`<option value="${e}">${toBengaliDigit(e)}</option>`).join(""),c=Array.from({length:12},(e,t)=>`<option value="${t}">${getBengaliMonthName(t)}</option>`).join(""),u=t.notes.sort((e,t)=>t.timestamp-e.timestamp).map(t=>`<li class="list-group-item d-flex justify-content-between align-items-start"><div><small class="text-muted">${new Date(t.timestamp).toLocaleString("bn-BD")}</small><p class="mb-0">${t.text}</p></div><i class="bi bi-trash delete-note-icon" onclick="deleteCustomerNote('${e}', ${t.timestamp})"></i></li>`).join("");n=`<div class="row"><div class="col-md-5"><h6><strong>ঠিকানা:</strong> ${t.address}</h6><h6><strong>মোবাইল:</strong> ${toBengaliDigit(t.mobile)}</h6><h6><strong>WhatsApp:</strong> ${toBengaliDigit(t.whatsapp)}</h6><h6><strong>প্রতি জার মূল্য:</strong> ${formatCurrency(t.jarPrice)}</h6></div><div class="col-md-7"><h6>সারসংক্ষেপ</h6><div class="row text-center"><div class="col-6 mb-3"><div class="p-2 border rounded"><h5 class="mb-0">${toBengaliDigit(d)}</h5><small>মোট জার</small></div></div><div class="col-6 mb-3"><div class="p-2 border rounded"><h5 class="mb-0">${formatCurrency(a+(t.openingBalance||0))}</h5><small>মোট বিল</small></div></div><div class="col-6"><div class="p-2 border rounded"><h5 class="mb-0">${formatCurrency(o)}</h5><small>মোট পরিশোধ</small></div></div><div class="col-6"><div class="p-2 border rounded ${i>0?"bg-warning-subtle":"bg-success-subtle"}"><h5 class="mb-0">${formatCurrency(i)}</h5><small>মোট বকেয়া</small></div></div></div></div></div><hr><div class="row g-3 align-items-end bg-light p-2 rounded mb-3"><div class="col-md-5"><label class="form-label form-label-sm">বছর</label><select id="history-year-filter" class="form-select form-select-sm">${s}</select></div><div class="col-md-5"><label class="form-label form-label-sm">মাস</label><select id="history-month-filter" class="form-select form-select-sm"><option value="">সব মাস</option>${c}</select></div><div class="col-md-2"><button class="btn btn-secondary btn-sm w-100" onclick="filterCustomerHistory('${e}')">ফিল্টার</button></div></div><div class="row"><div class="col-md-6"><h6>ডেলিভারি ইতিহাস</h6><div class="table-responsive" style="max-height:200px;overflow-y:auto"><table class="table table-sm table-striped table-bordered"><thead><tr><th>তারিখ</th><th class="text-end">জার</th><th class="text-end">বিল</th></tr></thead><tbody id="delivery-history-body"></tbody></table></div></div><div class="col-md-6"><h6>পেমেন্ট ইতিহাস</h6><div class="table-responsive" style="max-height:200px;overflow-y:auto"><table class="table table-sm table-striped table-bordered"><thead><tr><th>তারিখ</th><th>মাধ্যম</th><th class="text-end">পরিমাণ</th></tr></thead><tbody id="payment-history-body"></tbody></table></div></div></div><hr><h6>নোটস</h6><ul class="list-group mb-2" style="max-height:150px;overflow-y:auto">${u||'<li class="list-group-item">কোনো নোট নেই</li>'}</ul><div class="input-group"><input type="text" id="customer-note-text" class="form-control" placeholder="নতুন নোট যোগ করুন..."><button class="btn btn-outline-secondary" type="button" onclick="addCustomerNote('${e}')">যোগ করুন</button></div>`}const o=`<div class="modal fade" id="customerModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">${a}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">${n}<form id="customer-form" style="display:${t?"none":"block"};"><input type="hidden" name="id" value="${t?.id||""}"><div class="row"><div class="col-md-6 mb-3"><label class="form-label">নাম <span class="text-danger">*</span></label><input type="text" name="name" class="form-control" value="${t?.name||""}" required></div><div class="col-md-6 mb-3"><label class="form-label">ঠিকানা <span class="text-danger">*</span></label><input type="text" name="address" class="form-control" value="${t?.address||""}" required></div><div class="col-md-6 mb-3"><label class="form-label">মোবাইল নম্বর</label><input type="text" name="mobile" class="form-control" value="${t?.mobile||""}"></div><div class="col-md-6 mb-3"><label class="form-label">WhatsApp নম্বর</label><input type="text" name="whatsapp" class="form-control" value="${t?.whatsapp||""}"></div><div class="col-md-6 mb-3"><label class="form-label">প্রতি জার মূল্য (টাকা)</label><input type="number" name="jarPrice" class="form-control" value="${t?.jarPrice||40}" required></div><div class="col-md-6 mb-3"><label class="form-label">পূর্বের বকেয়া</label><input type="number" name="openingBalance" class="form-control" value="${t?.openingBalance||0}" ${t?"disabled":""}></div>${t?"":`<div class="col-12 mb-3"><label class="form-label">নোট (ঐচ্ছিক)</label><textarea name="initialNote" class="form-control"></textarea></div>`}</div></form></div><div class="modal-footer">${t?`<button type="button" class="btn btn-danger me-auto" onclick="deleteCustomer('${e}')">ডিলিট প্রোফাইল</button><button type="button" class="btn btn-outline-primary" onclick="openAddDeliveryModal(null,'${e}')">ডেলিভারি যোগ</button><button type="button" class="btn btn-outline-success" onclick="openAddPaymentModal(null,'${e}')">পেমেন্ট যোগ</button>`:""}<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">বন্ধ করুন</button><button type="button" class="btn btn-primary" onclick="saveCustomer()">সেভ করুন</button></div></div></div></div>`;document.getElementById("modal-container").innerHTML=o;const i=new bootstrap.Modal(document.getElementById("customerModal"));t&&(filterCustomerHistory(e),function(){const e=document.querySelector("#customerModal .modal-footer"),t=document.createElement("button");t.className="btn btn-info",t.textContent="এডিট",t.onclick=()=>{document.getElementById("customer-form").style.display="block",document.querySelectorAll("#customerModal .modal-body > *:not(form)").forEach(e=>e.style.display="none"),t.style.display="none"},e.insertBefore(t,e.children[3])}()),i.show()}
+        window.filterCustomerHistory=function(e){const t=document.getElementById("history-year-filter").value,a=document.getElementById("history-month-filter").value;let n=state.deliveries.filter(t=>t.customerId===e);t&&(n=n.filter(e=>new Date(e.date).getFullYear()==t)),a&&(n=n.filter(e=>new Date(e.date).getMonth()==a));const o=n.sort((e,t)=>new Date(t.date)-new Date(e.date)).map(e=>`<tr><td>${toBengaliDigit(formatDate(e.date))}</td><td class="text-end">${toBengaliDigit(e.jars)}</td><td class="text-end">${formatCurrency(e.bill)}</td></tr>`).join("");document.getElementById("delivery-history-body").innerHTML=o||'<tr><td colspan="3" class="text-center">কোনো ডেলিভারি নেই</td></tr>';let i=state.payments.filter(t=>t.customerId===e);t&&(i=i.filter(e=>new Date(e.date).getFullYear()==t)),a&&(i=i.filter(e=>new Date(e.date).getMonth()==a));const d=i.sort((e,t)=>new Date(t.date)-new Date(e.date)).map(e=>`<tr><td>${toBengaliDigit(formatDate(e.date))}</td><td>${e.method}</td><td class="text-end">${formatCurrency(e.amount)}</td></tr>`).join("");document.getElementById("payment-history-body").innerHTML=d||'<tr><td colspan="3" class="text-center">কোনো পেমেন্ট নেই</td></tr>'}
+        window.deleteCustomerNote=function(e,t){if(!confirm("আপনি কি নিশ্চিতভাবে এই নোটটি মুছে ফেলতে চান?"))return;const a=state.customers.findIndex(t=>t.id===e);a>-1&&(state.customers[a].notes=state.customers[a].notes.filter(e=>e.timestamp!==t),saveState(),bootstrap.Modal.getInstance(document.getElementById("customerModal")).hide(),openCustomerModal(e))}
+        window.saveCustomer=function(){const a=new FormData(document.getElementById("customer-form")),b=a.get("id"),c={name:a.get("name"),address:a.get("address"),mobile:a.get("mobile"),whatsapp:a.get("whatsapp"),jarPrice:parseFloat(a.get("jarPrice")),openingBalance:parseFloat(a.get("openingBalance"))||0,notes:[]};if(!c.name||!c.address)return void alert("দয়া করে নাম এবং ঠিকানা পূরণ করুন।");if(b){const a=state.customers.findIndex(a=>a.id===b);state.customers[a]={...state.customers[a],...c}}else{c.id="cust_"+Date.now();const b=a.get("initialNote");b&&c.notes.push({timestamp:Date.now(),text:b}),state.customers.push(c)}saveState(),bootstrap.Modal.getInstance(document.getElementById("customerModal")).hide(),renderCustomersPage()}
+        window.deleteCustomer=function(a){confirm("আপনি কি নিশ্চিতভাবে এই কাস্টমারকে মুছে ফেলতে চান? এটি সম্পর্কিত সমস্ত ডেটাও মুছে ফেলবে।")&&(state.customers=state.customers.filter(b=>b.id!==a),state.deliveries=state.deliveries.filter(b=>b.customerId!==a),state.payments=state.payments.filter(b=>b.customerId!==a),state.expenses=state.expenses.filter(b=>!b.deliveryId||state.deliveries.every(a=>a.id!==b.deliveryId)),saveState(),bootstrap.Modal.getInstance(document.getElementById("customerModal")).hide(),renderCustomersPage())}
+        window.addCustomerNote=function(a){const b=document.getElementById("customer-note-text").value;if(!b.trim())return;const c=state.customers.findIndex(b=>b.id===a);state.customers[c].notes.push({timestamp:Date.now(),text:b}),saveState(),bootstrap.Modal.getInstance(document.getElementById("customerModal")).hide(),openCustomerModal(a)}
+        window.renderDeliveriesPage=function(){const a=document.getElementById("deliveries-page"),b=[...state.deliveries].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(a=>{const b=state.customers.find(b=>b.id===a.customerId);return`<tr><td>${toBengaliDigit(formatDate(a.date))}</td><td>${b?b.name:"Unknown"}</td><td class="text-end">${toBengaliDigit(a.jars)}</td><td class="text-end">${formatCurrency(a.bill)}</td><td><button class="btn btn-sm btn-info me-1" onclick="openAddDeliveryModal('${a.id}')"><i class="bi bi-pencil-square"></i></button><button class="btn btn-sm btn-danger" onclick="deleteDelivery('${a.id}')"><i class="bi bi-trash"></i></button></td></tr>`}).join("");a.innerHTML=`<div class="d-flex justify-content-between align-items-center mb-3"><h2 class="page-title mb-0">ডেলিভারি ইতিহাস</h2><button class="btn btn-primary" onclick="openAddDeliveryModal()"><i class="bi bi-plus-circle me-2"></i> নতুন ডেলিভারি যোগ করুন</button></div><div class="card"><div class="card-body"><div class="table-responsive"><table class="table table-hover table-striped table-bordered"><thead><tr><th>তারিখ</th><th>কাস্টমার</th><th class="text-end">জার সংখ্যা</th><th class="text-end">বিল</th><th></th></tr></thead><tbody>${b}</tbody></table></div></div></div>`}
+        window.openAddDeliveryModal=function(a=null,b=null){const c=a?state.deliveries.find(b=>b.id===a):null,d=c?"ডেলিভারি সম্পাদনা করুন":"নতুন ডেলিভারি যোগ করুন",e=(new Date).toISOString().split("T")[0],f=state.customers.map(a=>`<option value="${a.id}">${a.name}</option>`).join(""),g=`<div class="modal fade" id="deliveryModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">${d}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="delivery-form"><input type="hidden" id="delivery-id" value="${c?.id||""}"><div class="mb-3"><label class="form-label">তারিখ</label><input type="date" id="delivery-date" class="form-control" value="${c?.date||e}" required></div><div class="mb-3"><label class="form-label">কাস্টমার সিলেক্ট</label><select id="delivery-customer" class="form-select" required><option value="">-- কাস্টমার সিলেক্ট করুন --</option>${f}</select></div><div class="mb-3"><label class="form-label">জার সংখ্যা</label><input type="number" id="delivery-jars" class="form-control" value="${c?.jars||""}" required></div><div class="alert alert-info" id="delivery-calculation-info" style="display:none;"></div><div class="mb-3"><label class="form-label">নোট (ঐচ্ছিক)</label><textarea id="delivery-notes" class="form-control">${c?.notes||""}</textarea></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">বন্ধ করুন</button><button type="button" class="btn btn-primary" onclick="saveDelivery()">সেভ করুন</button></div></div></div></div>`;document.getElementById("modal-container").innerHTML=g;const h=document.getElementById("delivery-customer");c&&(h.value=c.customerId),b&&(h.value=b);const i=new bootstrap.Modal(document.getElementById("deliveryModal")),j=document.getElementById("delivery-jars"),k=document.getElementById("delivery-calculation-info");function l(){const a=h.value,b=parseInt(j.value);if(!a||!b||b<=0)return void(k.style.display="none");const c=state.customers.find(b=>b.id===a),d=b*c.jarPrice,e=b*state.companyInfo.jarRefillCost;k.innerHTML=`বিল = ${formatCurrency(d)}, রিফিল খরচ = ${formatCurrency(e)}`,k.style.display="block"}j.addEventListener("input",l),h.addEventListener("change",l),l(),b&&bootstrap.Modal.getInstance(document.getElementById("customerModal"))?.hide(),i.show()}
+        window.saveDelivery=function(){const a=document.getElementById("delivery-id").value,b=document.getElementById("delivery-date").value,c=document.getElementById("delivery-customer").value,d=parseInt(document.getElementById("delivery-jars").value),e=document.getElementById("delivery-notes").value;if(!b||!c||!d||d<=0)return void alert("দয়া করে সকল প্রয়োজনীয় তথ্য পূরণ করুন।");const f=state.customers.find(a=>a.id===c),g=d*f.jarPrice;if(a){const h=state.deliveries.findIndex(b=>b.id===a);if(-1===h)return;state.deliveries[h]={...state.deliveries[h],date:b,customerId:c,jars:d,notes:e,bill:g},state.expenses=state.expenses.filter(b=>b.deliveryId!==a);const i=d*state.companyInfo.jarRefillCost;state.expenses.push({id:`exp_${a}_refill`,deliveryId:a,date:b,type:"জার রিফিল",amount:i,description:`${toBengaliDigit(d)} টি জার রিফিল (${f.name})`})}else{const a="del_"+Date.now();state.deliveries.push({id:a,customerId:c,date:b,jars:d,bill:g,notes:e});const h=d*state.companyInfo.jarRefillCost;state.expenses.push({id:`exp_${a}_refill`,deliveryId:a,date:b,type:"জার রিফিল",amount:h,description:`${toBengaliDigit(d)} টি জার রিফিল (${f.name})`})}saveState(),bootstrap.Modal.getInstance(document.getElementById("deliveryModal")).hide(),renderDeliveriesPage()}
+        window.deleteDelivery=function(a){confirm("আপনি কি এই ডেলিভারি এন্ট্রিটি মুছতে চান? এর সাথে সম্পর্কিত খরচের হিসাবও মুছে যাবে।")&&(state.deliveries=state.deliveries.filter(b=>b.id!==a),state.expenses=state.expenses.filter(b=>b.deliveryId!==a),saveState(),renderDeliveriesPage())}
+        window.renderPaymentsPage=function(){const a=document.getElementById("payments-page"),b=[...state.payments].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(a=>{const b=state.customers.find(b=>b.id===a.customerId);return`<tr><td>${toBengaliDigit(formatDate(a.date))}</td><td>${b?b.name:"Unknown"}</td><td class="text-end">${formatCurrency(a.amount)}</td><td>${a.method}</td><td><button class="btn btn-sm btn-info me-1" onclick="openAddPaymentModal('${a.id}')"><i class="bi bi-pencil-square"></i></button><button class="btn btn-sm btn-danger" onclick="deletePayment('${a.id}')"><i class="bi bi-trash"></i></button></td></tr>`}).join("");a.innerHTML=`<div class="d-flex justify-content-between align-items-center mb-3"><h2 class="page-title mb-0">পেমেন্ট ইতিহাস</h2><button class="btn btn-primary" onclick="openAddPaymentModal()"><i class="bi bi-plus-circle me-2"></i> পেমেন্ট যোগ করুন</button></div><div class="card"><div class="card-body"><div class="table-responsive"><table class="table table-hover table-striped table-bordered"><thead><tr><th>তারিখ</th><th>কাস্টমার</th><th class="text-end">পরিমাণ</th><th>মাধ্যম</th><th></th></tr></thead><tbody>${b}</tbody></table></div></div></div>`}
+        window.openAddPaymentModal=function(a=null,b=null){const c=a?state.payments.find(b=>b.id===a):null,d=c?"পেমেন্ট সম্পাদনা করুন":"পেমেন্ট যোগ করুন",e=(new Date).toISOString().split("T")[0],f=state.customers.map(a=>`<option value="${a.id}">${a.name}</option>`).join(""),g=`<div class="modal fade" id="paymentModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">${d}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="payment-form"><input type="hidden" id="payment-id" value="${c?.id||""}"><div class="mb-3"><label class="form-label">তারিখ</label><input type="date" id="payment-date" class="form-control" value="${c?.date||e}" required></div><div class="mb-3"><label class="form-label">কাস্টমার</label><select id="payment-customer" class="form-select" required><option value="">-- কাস্টমার সিলেক্ট করুন --</option>${f}</select></div><div class="mb-3"><label class="form-label">পরিশোধের পরিমাণ</label><input type="number" id="payment-amount" class="form-control" value="${c?.amount||""}" required></div><div class="mb-3"><label class="form-label">মাধ্যম</label><select id="payment-method" class="form-select"><option>ক্যাশ</option><option>bKash</option><option>Nagad</option></select></div><div class="mb-3"><label class="form-label">নোট (ঐচ্ছিক)</label><textarea id="payment-notes" class="form-control">${c?.notes||""}</textarea></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">বন্ধ করুন</button><button type="button" class="btn btn-primary" onclick="savePayment()">সেভ করুন</button></div></div></div></div>`;document.getElementById("modal-container").innerHTML=g,c&&(document.getElementById("payment-customer").value=c.customerId,document.getElementById("payment-method").value=c.method),b&&(document.getElementById("payment-customer").value=b);const h=new bootstrap.Modal(document.getElementById("paymentModal"));b&&bootstrap.Modal.getInstance(document.getElementById("customerModal"))?.hide(),h.show()}
+        window.savePayment=function(){const a=document.getElementById("payment-id").value,b=document.getElementById("payment-date").value,c=document.getElementById("payment-customer").value,d=parseFloat(document.getElementById("payment-amount").value),e=document.getElementById("payment-method").value,f=document.getElementById("payment-notes").value;if(!b||!c||!d||d<=0)return void alert("দয়া করে সকল প্রয়োজনীয় তথ্য পূরণ করুন।");const g={date:b,customerId:c,amount:d,method:e,notes:f};a?function(){const b=state.payments.findIndex(b=>b.id===a);state.payments[b]={...state.payments[b],...g}}():state.payments.push({id:"pay_"+Date.now(),...g}),saveState(),bootstrap.Modal.getInstance(document.getElementById("paymentModal")).hide(),renderPaymentsPage()}
+        window.deletePayment=function(a){confirm("আপনি কি এই পেমেন্ট এন্ট্রিটি মুছে ফেলতে চান?")&&(state.payments=state.payments.filter(b=>b.id!==a),saveState(),renderPaymentsPage())}
+        window.renderExpensesPage=function(){const a=document.getElementById("expenses-page"),b=[...state.expenses].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(a=>`<tr><td>${toBengaliDigit(formatDate(a.date))}</td><td>${a.type}</td><td>${a.description}</td><td class="text-end">${formatCurrency(a.amount)}</td><td>${a.deliveryId?`<i class="bi bi-info-circle" title="ডেলিভারি থেকে অটো-লগ হয়েছে"></i>`:`<button class="btn btn-sm btn-info me-1" onclick="openEditExpenseForm('${a.id}')"><i class="bi bi-pencil-square"></i></button><button class="btn btn-sm btn-danger" onclick="deleteExpense('${a.id}')"><i class="bi bi-trash"></i></button>`}</td></tr>`).join("");a.innerHTML=`<div class="d-flex justify-content-between align-items-center mb-3"><h2 class="page-title mb-0">খরচের হিসাব</h2><button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#add-expense-form" onclick="resetExpenseForm()"><i class="bi bi-plus-circle me-2"></i>খরচ যোগ করুন</button></div><div class="collapse mb-4" id="add-expense-form"><div class="card"><div class="card-body"><h5 class="card-title" id="expense-form-title">নতুন খরচ যোগ করুন</h5><form id="manual-expense-form"><input type="hidden" id="expense-id"><div class="row"><div class="col-md-3 mb-3"><label class="form-label">তারিখ</label><input type="date" id="expense-date" class="form-control" value="${(new Date).toISOString().split("T")[0]}" required></div><div class="col-md-3 mb-3"><label class="form-label">খরচের খাত</label><select id="expense-type" class="form-select"><option>অটো ভাড়া</option><option>দোকান ভাড়া</option><option>অন্যান্য</option></select></div><div class="col-md-2 mb-3"><label class="form-label">পরিমাণ</label><input type="number" id="expense-amount" class="form-control" required></div><div class="col-md-4 mb-3"><label class="form-label">খরচের বিবরণ</label><input type="text" id="expense-description" class="form-control" required></div></div><button type="button" class="btn btn-primary" id="expense-save-btn" onclick="saveManualExpense()">খরচ যোগ করুন</button><button type="button" class="btn btn-secondary" data-bs-toggle="collapse" data-bs-target="#add-expense-form">বাতিল</button></form></div></div></div><div class="card"><div class="card-body"><div class="table-responsive"><table class="table table-hover table-striped table-bordered"><thead><tr><th>তারিখ</th><th>খাত</th><th>খরচের বিবরণ</th><th class="text-end">পরিমাণ</th><th></th></tr></thead><tbody>${b}</tbody></table></div></div></div>`}
+        window.resetExpenseForm=function(){document.getElementById("manual-expense-form").reset(),document.getElementById("expense-id").value="",document.getElementById("expense-form-title").textContent="নতুন খরচ যোগ করুন",document.getElementById("expense-save-btn").textContent="খরচ যোগ করুন"}
+        window.openEditExpenseForm=function(a){const b=state.expenses.find(b=>b.id===a);b&&(document.getElementById("expense-id").value=b.id,document.getElementById("expense-date").value=b.date,document.getElementById("expense-type").value=b.type,document.getElementById("expense-amount").value=b.amount,document.getElementById("expense-description").value=b.description,document.getElementById("expense-form-title").textContent="খরচ সম্পাদনা করুন",document.getElementById("expense-save-btn").textContent="আপডেট করুন",new bootstrap.Collapse("#add-expense-form").show())}
+        window.saveManualExpense=function(){const a=document.getElementById("expense-id").value,b=document.getElementById("expense-date").value,c=document.getElementById("expense-type").value,d=parseFloat(document.getElementById("expense-amount").value),e=document.getElementById("expense-description").value;if(!b||!d||d<=0||!e)return void alert("দয়া করে সকল তথ্য পূরণ করুন।");if(a){const f=state.expenses.findIndex(b=>b.id===a);state.expenses[f]={...state.expenses[f],date:b,type:c,amount:d,description:e}}else state.expenses.push({id:"exp_manual_"+Date.now(),date:b,type:c,amount:d,description:e});saveState(),bootstrap.Collapse.getInstance("#add-expense-form").hide(),renderExpensesPage()}
+        window.deleteExpense=function(a){confirm("আপনি কি এই খরচের এন্ট্রিটি মুছে ফেলতে চান?")&&(state.expenses=state.expenses.filter(b=>b.id!==a),saveState(),renderExpensesPage())}
+        window.renderReportsPage=function(){const a=new Date,b=new Date(a.getFullYear(),a.getMonth(),1).toISOString().split("T")[0],c=new Date(a.getFullYear(),a.getMonth()+1,0).toISOString().split("T")[0];document.getElementById("reports-page").innerHTML=`<h2 class="page-title no-print">রিপোর্ট</h2><div class="card mb-4 no-print"><div class="card-body"><div class="row g-3 align-items-end"><div class="col-md-5"><label for="report-start-date" class="form-label">শুরুর তারিখ</label><input type="date" id="report-start-date" class="form-control" value="${b}"></div><div class="col-md-5"><label for="report-end-date" class="form-label">শেষ তারিখ</label><input type="date" id="report-end-date" class="form-control" value="${c}"></div><div class="col-md-2"><button class="btn btn-primary w-100" onclick="generateReport()">রিপোর্ট দেখুন</button></div></div></div></div><div id="report-output"></div>`}
+        window.generateReport=function(){const e=document.getElementById("report-start-date").value,t=document.getElementById("report-end-date").value,a=document.getElementById("report-output");if(!e||!t)return void(a.innerHTML='<div class="alert alert-warning">দয়া করে শুরুর তারিখ এবং শেষ তারিখ উভয়ই নির্বাচন করুন।</div>');const n=new Date(e),o=new Date(t);o.setHours(23,59,59,999);const{companyInfo:i}=state,d=t=>{const a=new Date(t.date);return a>=n&&a<=o},r=state.deliveries.filter(d),l=state.payments.filter(d),s=state.expenses.filter(d),c=r.reduce((e,t)=>e+t.jars,0),u=r.reduce((e,t)=>e+t.bill,0),m=l.reduce((e,t)=>e+t.amount,0),p=u-m,b=s.filter(e=>"জার রিফিল"===e.type).reduce((e,t)=>e+t.amount,0),g=s.filter(e=>"অটো ভাড়া"===e.type).reduce((e,t)=>e+t.amount,0),f=s.filter(e=>"দোকান ভাড়া"===e.type).reduce((e,t)=>e+t.amount,0),_=s.filter(e=>"অন্যান্য"===e.type).reduce((e,t)=>e+t.amount,0),y=b+g+f+_,h=m-y,w=`রিপোর্ট: ${toBengaliDigit(formatDate(n))} থেকে ${toBengaliDigit(formatDate(o))}`,v=new Set([...r.map(e=>e.customerId),...l.map(e=>e.customerId)]);let k="",x=0,E=0,S=0,D=0;v.forEach(e=>{const t=state.customers.find(t=>t.id===e),a=r.filter(t=>t.customerId===e),n=l.filter(t=>t.customerId===e),o=a.reduce((e,t)=>e+t.jars,0),i=a.reduce((e,t)=>e+t.bill,0),d=n.reduce((e,t)=>e+t.amount,0),c=i-d;k+=`<tr><td>${t.name}</td><td class="text-end">${toBengaliDigit(o)}</td><td class="text-end">${formatCurrency(i)}</td><td class="text-end">${formatCurrency(d)}</td><td class="text-end">${formatCurrency(c)}</td></tr>`,x+=o,E+=i,S+=d,D+=c}),""===k&&(k='<tr><td colspan="5" class="text-center">এই সময়ে কোনো লেনদেন হয়নি।</td></tr>'),a.innerHTML=`<div class="card" id="printable-report"><div class="card-header d-flex justify-content-between no-print"><h4>রিপোর্ট প্রিভিউ</h4><div><button class="btn btn-sm btn-success" onclick="downloadReportPDF()"><i class="bi bi-file-earmark-pdf me-2"></i>PDF</button><button class="btn btn-sm btn-secondary" onclick="window.print()"><i class="bi bi-printer me-2"></i> প্রিন্ট</button></div></div><div class="card-body"><div class="text-center mb-4"><h3>${i.name}</h3><p class="mb-0">${i.address}</p><h4 class="mt-3">${w}</h4></div><hr><h5 class="mb-3">সারসংক্ষেপ</h5><div class="row mb-4"><div class="col-lg-6"><ul class="list-group mb-3"><li class="list-group-item d-flex justify-content-between align-items-center">মোট জার ডেলিভারি <span class="badge bg-primary rounded-pill">${toBengaliDigit(c)}</span></li><li class="list-group-item d-flex justify-content-between align-items-center">মোট বিল তৈরি <span class="badge bg-info rounded-pill">${formatCurrency(u)}</span></li><li class="list-group-item d-flex justify-content-between align-items-center">মোট পেমেন্ট প্রাপ্ত <span class="badge bg-success rounded-pill">${formatCurrency(m)}</span></li><li class="list-group-item d-flex justify-content-between align-items-center">এই সময়ের বকেয়া <span class="badge bg-warning rounded-pill">${formatCurrency(p)}</span></li></ul></div><div class="col-lg-6"><ul class="list-group"><li class="list-group-item d-flex justify-content-between align-items-center text-danger">জার রিফিল খরচ <span class="badge bg-danger rounded-pill">${formatCurrency(b)}</span></li><li class="list-group-item d-flex justify-content-between align-items-center text-danger">অটো ভাড়া খরচ <span class="badge bg-danger rounded-pill">${formatCurrency(g)}</span></li><li class="list-group-item d-flex justify-content-between align-items-center text-danger">দোকান ভাড়া খরচ <span class="badge bg-danger rounded-pill">${formatCurrency(f)}</span></li><li class="list-group-item d-flex justify-content-between align-items-center text-danger">অন্যান্য খরচ <span class="badge bg-danger rounded-pill">${formatCurrency(_)}</span></li><li class="list-group-item d-flex justify-content-between align-items-center active">নিট লাভ <span class="badge bg-light text-dark rounded-pill">${formatCurrency(h)}</span></li></ul></div></div><hr><h5 class="mb-3">কাস্টমার ভিত্তিক হিসাব</h5><div class="table-responsive"><table class="table table-bordered table-striped"><thead class="table-light"><tr><th>কাস্টমারের নাম</th><th class="text-end">মোট জার</th><th class="text-end">মোট বিল</th><th class="text-end">মোট পেমেন্ট</th><th class="text-end">বকেয়া</th></tr></thead><tbody>${k}</tbody><tfoot><tr class="fw-bold table-group-divider"><td>মোট</td><td class="text-end">${toBengaliDigit(x)}</td><td class="text-end">${formatCurrency(E)}</td><td class="text-end">${formatCurrency(S)}</td><td class="text-end">${formatCurrency(D)}</td></tr></tfoot></table></div></div></div>`}
+        window.downloadReportPDF=function(){const{jsPDF:a}=window.jspdf;html2canvas(document.getElementById("printable-report"),{scale:2,backgroundColor:null}).then(b=>{const c=b.toDataURL("image/png"),d=new a("p","mm","a4"),e=d.internal.pageSize.getWidth(),f=b.height*e/b.width;d.addImage(c,"PNG",0,0,e,f);const g=document.getElementById("report-start-date").value,h=document.getElementById("report-end-date").value,i=`Report-from-${g}-to-${h}.pdf`;d.save(i)})}
+        window.renderInvoicePage=function(){const a=document.getElementById("invoice-page"),b=state.customers.map(a=>`<option value="${a.id}">${a.name}</option>`).join(""),c=(new Date).getFullYear(),d=Array.from({length:5},(_,a)=>c-a).map(a=>`<option value="${a}">${toBengaliDigit(a)}</option>`).join(""),e=Array.from({length:12},(_,a)=>`<option value="${a+1}" ${a===(new Date).getMonth()?"selected":""}>${getBengaliMonthName(a)}</option>`).join("");a.innerHTML=`<h2 class="page-title">ইনভয়েস তৈরি করুন</h2><div class="card mb-4 no-print"><div class="card-body"><div class="row g-3"><div class="col-md-4"><label class="form-label">কাস্টমার</label><select id="invoice-customer" class="form-select">${b}</select></div><div class="col-md-3"><label class="form-label">মাস</label><select id="invoice-month" class="form-select">${e}</select></div><div class="col-md-3"><label class="form-label">বছর</label><select id="invoice-year" class="form-select">${d}</select></div><div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100" onclick="generateInvoice()">ইনভয়েস দেখুন</button></div></div></div></div><div id="invoice-output"></div>`}
+        window.generateInvoice=function(){const a=document.getElementById("invoice-customer").value,b=parseInt(document.getElementById("invoice-month").value,10),c=parseInt(document.getElementById("invoice-year").value,10),d=document.getElementById("invoice-output");if(!a)return void(d.innerHTML='<div class="alert alert-warning">দয়া করে একজন কাস্টমার সিলেক্ট করুন।</div>');const e=state.customers.find(b=>b.id===a),{companyInfo:f}=state,g=(new Date).getFullYear(),h=(new Date).getMonth()+1,i=(new Date).getDate(),j=`${g}${h}${i}-${a.slice(-4)}`;let k=toBengaliDigit(f.phone1);f.phone2&&(k+=`, ${toBengaliDigit(f.phone2)}`);const l=new Date(c,b-1,1),m=new Date(c,b,1),n=state.deliveries.filter(b=>b.customerId===a&&new Date(b.date)<l),o=state.payments.filter(b=>b.customerId===a&&new Date(b.date)<l),p=n.reduce((a,b)=>a+b.bill,0),r=o.reduce((a,b)=>a+b.amount,0),s=(e.openingBalance||0)+p-r,t=s>=0?"পূর্বের বকেয়া:":"পূর্বের অগ্রিম:",u=state.deliveries.filter(d=>{const e=new Date(d.date);return d.customerId===a&&e>=l&&e<m}),v=state.payments.filter(d=>{const e=new Date(d.date);return d.customerId===a&&e>=l&&e<m}),w=u.reduce((a,b)=>a+b.bill,0),x=u.reduce((a,b)=>a+b.jars,0),y=v.reduce((a,b)=>a+b.amount,0),z=s+w,A=z-y,B=A>=0?"সর্বমোট বকেয়া:":"সর্বমোট অগ্রিম:",C=u.map(a=>`<tr><td>${toBengaliDigit(formatDate(a.date))}</td><td class="text-end">${toBengaliDigit(a.jars)}</td><td class="text-end">${formatCurrency(e.jarPrice)}</td><td class="text-end">${formatCurrency(a.bill)}</td></tr>`).join(""),D=getBengaliMonthName(b-1);d.innerHTML=`<div class="card"><div class="card-body"><div id="invoice-container"><div class="row mb-4 p-3 rounded" style="background-color:rgba(0,119,182,0.15) !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><div class="col-6"><h4 class="text-primary">${f.name}</h4><p class="mb-0">${f.address}</p><p class="mb-0">মোবাইল: ${k}</p></div><div class="col-6 text-end"><h4>ইনভয়েস</h4><p class="mb-0">ইনভয়েস নং: ${toBengaliDigit(j)}</p><p class="mb-0">তারিখ: ${toBengaliDigit(formatDate(new Date))}</p><p class="mb-0">মাস: ${D}, ${toBengaliDigit(c)}</p></div></div><div class="row mb-4"><div class="col-6"><strong>বিল টু:</strong><p class="mb-0">${e.name}</p><p class="mb-0">${e.address}</p><p class="mb-0">মোবাইল: ${toBengaliDigit(e.mobile)}</p></div></div><table class="table table-bordered table-striped"><thead><tr><th>তারিখ</th><th class="text-end">জার</th><th class="text-end">একক মূল্য</th><th class="text-end">মোট</th></tr></thead><tbody>${C||`<tr><td colspan="4" class="text-center">এই মাসে কোনো ডেলিভারি নেই।</td></tr>`}</tbody><tfoot><tr><td colspan="3" class="text-end border-0">${t}</td><td class="text-end border-0">${formatCurrency(Math.abs(s))}</td></tr><tr><td colspan="3" class="text-end">${D} মাসের মোট জার:</td><td class="text-end fw-bold">${toBengaliDigit(x)}</td></tr><tr><td colspan="3" class="text-end">${D} মাসের বিল:</td><td class="text-end">${formatCurrency(w)}</td></tr><tr><td colspan="3" class="text-end fw-bold">মোট বিল:</td><td class="text-end fw-bold">${formatCurrency(z)}</td></tr><tr><td colspan="3" class="text-end">পরিশোধিত:</td><td class="text-end">${formatCurrency(y)}</td></tr><tr class="fw-bold table-group-divider"><td colspan="3" class="text-end bg-light" style="--bs-bg-opacity:1;background-color:rgba(var(--bs-light-rgb),var(--bs-bg-opacity))!important;">${B}</td><td class="text-end bg-light" style="--bs-bg-opacity:1;background-color:rgba(var(--bs-light-rgb),var(--bs-bg-opacity))!important;">${formatCurrency(Math.abs(A))}</td></tr></tfoot></table><div class="text-center mt-4"><p>ধন্যবাদ আমাদের সেবা গ্রহণ করার জন্য।</p></div></div><div class="text-center mt-4 no-print"><button class="btn btn-secondary" onclick="window.print()"><i class="bi bi-printer me-2"></i> প্রিন্ট</button><button class="btn btn-success" onclick="downloadInvoicePDF()"><i class="bi bi-file-earmark-pdf me-2"></i> PDF ডাউনলোড</button><button class="btn btn-info" onclick="sendWhatsAppMessage('${a}','${c}','${b}')"><i class="bi bi-whatsapp me-2"></i> WhatsApp-এ পাঠান</button></div></div></div>`}
+        window.downloadInvoicePDF=function(){const{jsPDF:a}=window.jspdf;html2canvas(document.getElementById("invoice-container"),{scale:2,backgroundColor:null,onclone:e=>{e.querySelector("[style*='background-color']").style.backgroundColor="rgba(0,119,182,0.15)"}}).then(b=>{const c=b.toDataURL("image/png"),d=new a("p","mm","a4"),e=d.internal.pageSize.getWidth(),f=b.height*e/b.width;d.addImage(c,"PNG",0,0,e,f),d.save("invoice.pdf")})}
+        window.sendWhatsAppMessage=function(a,b,c){const d=state.customers.find(b=>b.id===a);if(!d||!d.whatsapp)return void alert("এই কাস্টমারের কোনো WhatsApp নম্বর যোগ করা নেই।");const{companyInfo:e}=state,f=new Date(b,c-1,1),g=new Date(b,c,1),h=state.deliveries.filter(b=>b.customerId===a&&new Date(b.date)<f),i=state.payments.filter(b=>b.customerId===a&&new Date(b.date)<f),j=h.reduce((a,b)=>a+b.bill,0),k=i.reduce((a,b)=>a+b.amount,0),l=(d.openingBalance||0)+j-k,m=state.deliveries.filter(d=>{const e=new Date(d.date);return d.customerId===a&&e>=f&&e<g}),n=state.payments.filter(d=>{const e=new Date(d.date);return d.customerId===a&&e>=f&&e<g}),o=m.reduce((a,b)=>a+b.bill,0),p=n.reduce((a,b)=>a+b.amount,0),r=l+o-p,s=m.reduce((a,b)=>a+b.jars,0),t=getBengaliMonthName(c-1),u=r>=0?`সর্বমোট বকেয়া: ${formatCurrency(r)}`:`সর্বমোট অগ্রিম: ${formatCurrency(Math.abs(r))}`,v=r>0?"অনুগ্রহ করে বকেয়া পরিশোধ করুন।\nধন্যবাদ।":"ধন্যবাদ।";const w=`${e.name}\n${e.address}\n\nপ্রিয় ${d.name},\n${t} ${toBengaliDigit(b)} মাসের হিসাব:\n\nমোট জার: ${toBengaliDigit(s)}\nএই মাসের বিল: ${formatCurrency(o)}\nএই মাসে পরিশোধিত: ${formatCurrency(p)}\n\n${u}\n\n${v}`;window.open(`https://wa.me/${d.whatsapp}?text=${encodeURIComponent(w)}`,"_blank")}
+        window.renderProfilePage=function(){const a=document.getElementById("profile-page"),{name:b,address:c,phone1:d,phone2:e,business:f,jarRefillCost:g}=state.companyInfo;a.innerHTML=`<h2 class="page-title">কোম্পানির প্রোফাইল</h2><div class="card"><div class="card-body"><form id="profile-form"><div class="row"><div class="col-md-6 mb-3"><label class="form-label">কোম্পানির নাম</label><input type="text" name="name" class="form-control" value="${b}" required></div><div class="col-md-6 mb-3"><label class="form-label">ব্যবসার ধরন</label><input type="text" name="business" class="form-control" value="${f}"></div><div class="col-12 mb-3"><label class="form-label">ঠিকানা</label><input type="text" name="address" class="form-control" value="${c}" required></div><div class="col-md-6 mb-3"><label class="form-label">ফোন নম্বর ১</label><input type="text" name="phone1" class="form-control" value="${d}"></div><div class="col-md-6 mb-3"><label class="form-label">ফোন নম্বর ২ (ঐচ্ছিক)</label><input type="text" name="phone2" class="form-control" value="${e||""}"></div><div class="col-md-6 mb-3"><label class="form-label">প্রতি জার রিফিল খরচ (৳)</label><input type="number" name="jarRefillCost" class="form-control" value="${g}" required></div></div><button type="button" class="btn btn-primary" onclick="saveProfile()">সেভ করুন</button></form></div></div>`}
+        window.saveProfile=function(){const a=new FormData(document.getElementById("profile-form"));state.companyInfo={name:a.get("name"),address:a.get("address"),phone1:a.get("phone1"),phone2:a.get("phone2"),business:a.get("business"),jarRefillCost:parseFloat(a.get("jarRefillCost"))},saveState(),updateCompanyInfoUI(),alert("প্রোফাইল সফলভাবে আপডেট করা হয়েছে।")}
+
+        initializeData();
+        updateCurrentDate();
+        showPage('dashboard');
+    });
+
+    function toggleSidebar() {
+        if (window.innerWidth <= 768) {
+             document.getElementById('sidebar').classList.toggle('active');
+        } else {
+            document.body.classList.toggle('sidebar-collapsed');
+        }
+    }
+     function toggleSidebarMobile() {
+        document.getElementById('sidebar').classList.toggle('active');
+    }
+    </script>
+</body>
+</html>
